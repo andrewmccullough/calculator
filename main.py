@@ -1,5 +1,9 @@
 import re, os, sys, json, datetime
 
+settings = {
+    "separator" : "~"
+} # default settings
+
 os.system("clear")
 
 if os.path.isfile("settings.json"):
@@ -8,9 +12,8 @@ if os.path.isfile("settings.json"):
     f.close()
     settings = json.loads(data)
 else:
-    f = open("settings.json", "w")
-    settings = {"separator" : "~"}
     data = json.dumps(settings)
+    f = open("settings.json", "w")
     f.write(data)
     f.close()
 
@@ -22,7 +25,7 @@ def log(userinput, error):
     os.system("clear")
     print("Something went wrong. Check the error log for details.")
 
-    t = datetime.datetime.utcnow().isoformat()
+    t = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")
 
     writeable = "[" + t + "]\n     [error message] " + error + "\n     [ user  input ] " + userinput + "\n"
 
@@ -33,14 +36,14 @@ def log(userinput, error):
 
 message("Press return on an empty line to quit.")
 
-expression = input().strip()
+expression = input().strip() # user expression inputted
 while expression != "":
     regex = re.compile(r"([\+\/\-\*x])? ?([\d.]+) ?")
 
     terms = []
+    future = []
 
     matches = regex.finditer(expression)
-
     for i, match in enumerate(matches):
         operator = match.group(1)
         value = float(match.group(2))
@@ -48,8 +51,6 @@ while expression != "":
 
     if len(terms) == 0:
         log(expression, "User entered an invalid expression. Regular expression parsing returned no terms.")
-
-    future = []
 
     for i, term in enumerate(terms):
         if i == 0:
@@ -76,7 +77,6 @@ while expression != "":
 
     term = future
     future = []
-
     for i, term in enumerate(term):
         if i == 0:
             future.append(term)
