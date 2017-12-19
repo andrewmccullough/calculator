@@ -19,7 +19,6 @@ def message(text):
     print(settings["separator"] * len(text))
 
 def log(userinput, error):
-
     os.system("clear")
     print("Something went wrong. Check the error log for details.")
 
