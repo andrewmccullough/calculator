@@ -5,11 +5,18 @@ import sys, re, os, datetime
 operators = ["/", "*", "+", "-"]
 
 def showmessage(message, after = True):
+    
+    length = len(message)
+    if "\n" in message:
+        lines = message.split("\n")
+        lengths = [len(line) for line in lines]
+        length = max(lengths)
+
     if after:
         print(message)
-        print("~" * len(message))
+        print("~" * length)
     else:
-        print("~" * len(message))
+        print("~" * length)
         print(message)
 
 def kill(message):
@@ -23,7 +30,7 @@ def kill(message):
 def main():
 
     os.system("clear")
-    showmessage("Press return on a new line to exit.")
+    showmessage("Press return on a new line to exit.\nSeparate terms and operators with spaces.")
     expression = input().strip()
 
     while expression != "":
@@ -132,7 +139,7 @@ if __name__ == '__main__':
     try:
         main()
     except KeyboardInterrupt:
-        kill("You can also press return on an empty line to exit.")
+        kill("You can also press return on a new line to exit.")
     except Exception as e:
         print(e.__class__.__name__)
         print(e.__doc__)
