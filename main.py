@@ -1,115 +1,102 @@
-import re, os, sys, json, datetime
+import sys
 
-settings = {
-    "separator" : "~"
-} # default settings
+### constants
 
-os.system("clear")
+operators = ["/", "*", "+", "-"]
 
-if os.path.isfile("settings.json"):
-    f = open("settings.json")
-    data = f.read()
-    f.close()
-    settings = json.loads(data)
-else:
-    data = json.dumps(settings)
-    f = open("settings.json", "w")
-    f.write(data)
-    f.close()
+def kill(message):
+    print("~" * len(message))
+    print(message)
+    sys.exit()
 
-def message(text):
-    print(text)
-    print(settings["separator"] * len(text))
+### action
 
-def log(userinput, error):
-    os.system("clear")
-    print("Something went wrong. Check the error log for details.")
+expression = input().strip()
+terms = expression.split()
+future = []
+
+for number in range(1, len(terms), 2):
+
+    if terms[number] not in operators:
+        kill("Every pair of terms should have an operator between them.")
+
+# First pass, multiplication and division
+i = 0
+while i < len(terms):
+
+    term = terms[i]
+
+    if term in operators:
+
+        if term in ["+", "-"]:
+            future.append(terms[i - 1])
+            future.append(term)
+        else:
+            a = float(terms[i - 1])
+            b = float(terms[i + 1])
+
+            if term == "*":
+                result = a * b
+            else:
+                result = a / b
+
+            future.append(result)
+            terms = future + terms[i + 1 + 1:]
+            future = []
+            i = 0
+
+    else:
+        try:
+            float(term)
+        except ValueError:
+            kill(term + " is not a valid number.")
+
+    i = i + 1
+
+future = []
+
+# Second pass, addition and subtraction
+i = 0
+while i < len(terms):
+
+    term = terms[i]
+
+    if term in ["+", "-"]:
+        a = float(terms[i - 1])
+        b = float(terms[i + 1])
+
+        if term == "+":
+            result = a + b
+        else:
+            result = a - b
+
+        future.append(result)
+        terms = future + terms[i + 1 + 1:]
+        future = []
+        i = 0
+
+    i = i + 1
+
+if len(terms) > 1:
 
     t = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")
 
-    writeable = "[" + t + "]\n     [error message] " + error + "\n     [ user  input ] " + userinput + "\n"
+    message = "[" + t + "]\n     [remaining terms] " + terms + "\n     [ user  input ] " + userinput + "\n"
 
     f = open("errors.log", "a")
-    f.write(writeable)
+    f.write(message)
 
-    sys.exit()
+    kill("There's been a problem. Check the log for details.")
 
-message("Press return on an empty line to quit.")
+if terms[0] == int(terms[0]):
+    result = int(terms[0])
+else:
+    result = terms[0]
 
-expression = input().strip() # user expression inputted
-while expression != "":
-    regex = re.compile(r"([\+\/\-\*x])? ?([\d.]+) ?")
+message = "= " + str(result)
+print(message)
 
-    terms = []
-    future = []
-
-    matches = regex.finditer(expression)
-    for i, match in enumerate(matches):
-        operator = match.group(1)
-        value = float(match.group(2))
-        terms.append([operator, value])
-
-    if len(terms) == 0:
-        log(expression, "User entered an invalid expression. Regular expression parsing returned no terms.")
-
-    for i, term in enumerate(terms):
-        if i == 0:
-            future.append(term)
-        else:
-            if term[0] in ["/", "*", "x", "÷"]:
-
-                previousterm = future.pop(len(future) - 1)
-
-                if term[0] in ["/", "÷"]:
-                    # division
-                    result = previousterm[1] / term[1]
-                    future.append([previousterm[0], result])
-                else:
-                    # multiplication
-                    result = previousterm[1] * term[1]
-                    future.append([previousterm[0], result])
-
-            elif term[0] in ["+", "-"]:
-                future.append(term)
-            else:
-                log(expression, "User entered an invalid operator.")
-
-
-    term = future
-    future = []
-    for i, term in enumerate(term):
-        if i == 0:
-            future.append(term)
-        else:
-            previousterm = future.pop(len(future) - 1)
-
-            if term[0] == "-":
-                # subtraction
-                result = previousterm[1] - term[1]
-                future.append([previousterm[0], result])
-            else:
-                # addition
-                result = previousterm[1] + term[1]
-                future.append([previousterm[0], result])
-
-    if len(future) == 1:
-        result = future[0][1]
-
-        if result == int(result):
-            result = "= " + str(int(result))
-        else:
-            result = "= " + str(result)
-
-        if len(result) > len(expression):
-            printable = len(result)
-        else:
-            printable = len(expression)
-
-        print(result)
-        print(settings["separator"] * printable)
-    else:
-        log(expression, "Expression was not reduced to a single term after processing multiplication, division, subtraction, and addition operations.")
-
-    expression = input().strip()
-print("Goodbye.")
-sys.exit()
+if len(message) > len(expression):
+    print("~" * len(message))
+else:
+    print("~" * len(expression))
